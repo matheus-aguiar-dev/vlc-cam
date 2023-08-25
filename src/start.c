@@ -3,6 +3,7 @@
 #include <math.h> // Include the math library
 #include <gdk/gdkx.h>
 #include <stdlib.h>
+#include <time.h>
 #include <string.h>
 #include <vlc/vlc.h>
 #include <fcntl.h>
@@ -12,8 +13,13 @@ libvlc_instance_t * inst;
 libvlc_media_player_t *mp;
 libvlc_media_t *m;
 GtkWidget *window,*player_widget;
+GtkWidget *picture_button, *record_button;
 GtkBuilder *builder;
 struct CamInfo cam;
+time_t rawtime;
+struct tm *timeinfo;
+char buffer[80];
+bool is_recording = false;
 const char* const vlc_args[] = {
 	"--no-xlib",
 	"--v4l2-chroma=mjpg",
@@ -30,20 +36,45 @@ struct CamInfo{
 };
 
 void on_picture_button_clicked(GtkButton *button, gpointer user_data){
-	//libvlc_video_take_snapshot(mp,0,"/home/matheus/policorp/cam-app/src/output.png",0,0);
-	libvlc_media_player_release(mp);
-	libvlc_release(inst);
-	inst = libvlc_new(sizeof(vlc_args) / sizeof(vlc_args[0]),vlc_args);
-	m = libvlc_media_new_location(inst, "v4l2:///dev/video0");
-	const char *audio_options = ":input-slave=alsa://";  // Modify this to match your audio source
-	libvlc_media_add_option(m, audio_options);
-	const char *transcode_options = ":sout=#transcode{vcodec=theo,vb=800,fps=15,scale=1,acodec=vorb,ab=90,channels=1,samplerate=44100, filter=transform{type=hflip}}:duplicate{dst=display{noaudio},dst=std{access=file,mux=ogg,dst=screen.ogg}}";
-	libvlc_media_add_option(m, transcode_options);
-	mp = libvlc_media_player_new_from_media(m);
-	libvlc_media_release(m);
-	libvlc_media_player_play(mp);
-	libvlc_media_player_set_xwindow(mp, GDK_WINDOW_XID(gtk_widget_get_window(player_widget)));
-	gtk_widget_show_all (window);
+	time(&rawtime);
+	timeinfo = localtime(&rawtime);
+	strftime(buffer, sizeof(buffer), "%Y-%m-%d-%H-%M-%S.png", timeinfo);
+	libvlc_video_take_snapshot(mp,0,buffer,0,0);
+}
+
+void on_record_button_clicked(GtkButton *button, gpointer user_data){
+	GtkStyleContext *context = gtk_widget_get_style_context(record_button);
+	if(is_recording){
+		gtk_style_context_remove_class(context, "record");
+		is_recording=false;
+		libvlc_media_player_release(mp);
+		libvlc_release(inst);
+		inst = libvlc_new(sizeof(vlc_args) / sizeof(vlc_args[0]), vlc_args);
+		m = libvlc_media_new_location(inst, "v4l2:///dev/video0");
+		mp = libvlc_media_player_new_from_media (m);
+		libvlc_media_release(m);
+		libvlc_media_player_play(mp);
+		libvlc_media_player_set_xwindow(mp, GDK_WINDOW_XID(gtk_widget_get_window(player_widget)));
+		gtk_widget_show(picture_button);
+
+	}
+	else{
+		gtk_style_context_add_class(context,"record");
+		is_recording=true;
+		libvlc_media_player_release(mp);
+		libvlc_release(inst);
+		inst = libvlc_new(sizeof(vlc_args) / sizeof(vlc_args[0]),vlc_args);
+		m = libvlc_media_new_location(inst, "v4l2:///dev/video0");
+		const char *audio_options = ":input-slave=alsa://";  // Modify this to match your audio source
+		libvlc_media_add_option(m, audio_options);
+		const char *transcode_options = ":sout=#transcode{vcodec=theo,vb=1600,fps=15,scale=1,acodec=vorb,ab=90,channels=1,samplerate=44100, filter=transform{type=hflip}}:duplicate{dst=display{noaudio},dst=std{access=file,mux=ogg,dst=screen.ogg}}";
+		libvlc_media_add_option(m, transcode_options);
+		mp = libvlc_media_player_new_from_media(m);
+		libvlc_media_release(m);
+		libvlc_media_player_play(mp);
+		libvlc_media_player_set_xwindow(mp, GDK_WINDOW_XID(gtk_widget_get_window(player_widget)));
+		gtk_widget_hide(picture_button);
+	}
 }
 
 
@@ -55,7 +86,7 @@ void player_widget_on_realize(GtkWidget *widget, gpointer data) {
 	libvlc_media_player_play(mp);
 	libvlc_media_player_set_xwindow(mp, GDK_WINDOW_XID(gtk_widget_get_window(widget)));
 //	g_signal_connect(G_OBJECT(widget), "configure-event", G_CALLBACK(configure_callback), NULL);    
-	//gtk_widget_set_size_request(player_widget, cam.sizes[1][0], cam.sizes[1][1]);
+//	gtk_widget_set_size_request(player_widget, cam.sizes[1][0], cam.sizes[1][1]);
 }
 static void activate (GtkApplication* app,
 		gpointer        cam_data)
@@ -64,7 +95,7 @@ static void activate (GtkApplication* app,
 	gtk_widget_add_events(GTK_WIDGET(window), GDK_CONFIGURE);  
 	player_widget = GTK_DRAWING_AREA(gtk_builder_get_object(builder, "cam-area"));
 	g_signal_connect(G_OBJECT(player_widget), "realize", G_CALLBACK(player_widget_on_realize), NULL);    
-	gtk_widget_show_all (window);
+	gtk_widget_show (window);
 }
 static void cam_compatibilites(struct CamInfo *cam){
 	int fd = open("/dev/video0", O_RDWR);
@@ -99,12 +130,11 @@ main (int    argc,
 		char **argv)
 {   
 	int status;
-	GtkWidget *picture_button;
 	GtkApplication *app;
 	cam_compatibilites(&cam);
 	fflush(stdout);
 	gtk_init(&argc, &argv);
-	builder = gtk_builder_new_from_file("/home/matheus/policorp/cam-app/data/main-window.ui");
+	builder = gtk_builder_new_from_file("/home/kriza/projetos/cam-app/data/main-window.ui");
 	GtkCssProvider *css_provider = gtk_css_provider_new();
 	GError *error = NULL;
 	if (!gtk_css_provider_load_from_path(css_provider, "style.css", &error)) {
@@ -118,9 +148,16 @@ main (int    argc,
 	gtk_style_context_add_provider_for_screen(screenGtk,
 			GTK_STYLE_PROVIDER(css_provider),
 			GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
+	GtkWidget *thumb_img = GTK_WIDGET(gtk_builder_get_object(builder, "thumb-img"));
+	GdkPixbuf *pixbuf = gdk_pixbuf_new_from_file("2023-08-25-13-25-35.png", 0);
+	GdkPixbuf *scaledPixbuf = gdk_pixbuf_scale_simple(pixbuf, 70, 70, GDK_INTERP_BILINEAR);
+	gtk_image_set_from_pixbuf(GTK_IMAGE(thumb_img), scaledPixbuf);
+
 
 	picture_button = GTK_WIDGET(gtk_builder_get_object(builder, "picture_button"));
+	record_button = GTK_WIDGET(gtk_builder_get_object(builder, "record_button"));
 	g_signal_connect(picture_button, "clicked", G_CALLBACK(on_picture_button_clicked), NULL);
+	g_signal_connect(record_button, "clicked", G_CALLBACK(on_record_button_clicked), NULL);
 	app = gtk_application_new("com.example.myapp", G_APPLICATION_FLAGS_NONE);
 	window = GTK_WIDGET(gtk_builder_get_object(builder, "main-window"));
 	gtk_builder_connect_signals(builder, NULL);

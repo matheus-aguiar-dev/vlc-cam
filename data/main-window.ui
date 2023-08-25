@@ -1,12 +1,24 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Generated with glade 3.38.2 -->
+<!-- Generated with glade 3.40.0 -->
 <interface>
   <requires lib="gtk+" version="3.24"/>
   <object class="GtkImage" id="image1">
     <property name="visible">True</property>
     <property name="can-focus">False</property>
-    <property name="pixel-size">42</property>
-    <property name="icon-name">camera</property>
+    <property name="margin-start">10</property>
+    <property name="margin-end">10</property>
+    <property name="margin-top">10</property>
+    <property name="margin-bottom">10</property>
+    <property name="pixbuf">images/camera.png</property>
+  </object>
+  <object class="GtkImage" id="image2">
+    <property name="visible">True</property>
+    <property name="can-focus">False</property>
+    <property name="margin-start">10</property>
+    <property name="margin-end">10</property>
+    <property name="margin-top">10</property>
+    <property name="margin-bottom">10</property>
+    <property name="pixbuf">images/video.png</property>
   </object>
   <object class="GtkApplicationWindow" id="main-window">
     <property name="can-focus">False</property>
@@ -16,10 +28,10 @@
       <object class="GtkBox">
         <property name="visible">True</property>
         <property name="can-focus">False</property>
-        <property name="orientation">vertical</property>
+        <property name="spacing">20</property>
         <child>
           <object class="GtkDrawingArea" id="cam-area">
-            <property name="width-request">600</property>
+            <property name="width-request">800</property>
             <property name="height-request">600</property>
             <property name="visible">True</property>
             <property name="can-focus">False</property>
@@ -35,20 +47,37 @@
         <child>
           <object class="GtkBox">
             <property name="width-request">0</property>
-            <property name="height-request">0</property>
+            <property name="height-request">100</property>
             <property name="visible">True</property>
             <property name="can-focus">False</property>
-            <property name="halign">center</property>
+            <property name="margin-end">20</property>
+            <property name="orientation">vertical</property>
+            <property name="spacing">20</property>
             <child>
-              <placeholder/>
+              <object class="GtkImage" id="thumb-img">
+                <property name="height-request">100</property>
+                <property name="visible">True</property>
+                <property name="can-focus">False</property>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">True</property>
+                <property name="position">0</property>
+              </packing>
             </child>
             <child>
               <object class="GtkButton" id="picture_button">
+                <property name="label" translatable="yes">
+</property>
                 <property name="visible">True</property>
                 <property name="can-focus">True</property>
                 <property name="receives-default">True</property>
                 <property name="image">image1</property>
+                <property name="use-underline">True</property>
                 <property name="always-show-image">True</property>
+                <style>
+                  <class name="round-button"/>
+                </style>
               </object>
               <packing>
                 <property name="expand">False</property>
@@ -57,7 +86,33 @@
               </packing>
             </child>
             <child>
-              <placeholder/>
+              <object class="GtkButton" id="record_button">
+                <property name="visible">True</property>
+                <property name="can-focus">True</property>
+                <property name="receives-default">True</property>
+                <property name="image">image2</property>
+                <property name="always-show-image">True</property>
+                <style>
+                  <class name="round-button"/>
+                </style>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">True</property>
+                <property name="position">2</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkLabel" id="recording_timer">
+                <property name="visible">True</property>
+                <property name="can-focus">False</property>
+                <property name="label" translatable="yes">timer</property>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">True</property>
+                <property name="position">3</property>
+              </packing>
             </child>
           </object>
           <packing>
@@ -72,7 +127,7 @@
       </object>
     </child>
     <style>
-      <class name="negao"/>
+      <class name="bgblack"/>
     </style>
   </object>
 </interface>

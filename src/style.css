@@ -1,3 +1,19 @@
-.negao{
-    background-color: #000000;
+.bgblack{
+	background-color: #000000;
 }
+.round-button {
+	border-radius: 50%;
+	background: white;
+}
+.round-button:hover {
+	background: grey;
+}
+.record{
+	border-radius: 50%;
+	background: red;
+}
+.record:hover{
+	border-radius: 50%;
+	background: darkred;
+}
+
