@@ -22,7 +22,6 @@ int count = 0 ;
 struct CamInfo cam;
 time_t rawtime;
 struct tm *timeinfo;
-char buffer[80];
 char time_str[80];
 bool is_recording = false;
 const char* const vlc_args[] = {
@@ -70,6 +69,7 @@ gboolean update_label(gpointer data) {
 	return G_SOURCE_CONTINUE;
 }
 void on_picture_button_clicked(GtkButton *button, gpointer user_data){
+	char buffer[100];
 	gtk_widget_set_sensitive(picture_button, FALSE);
 	release_instance();
 	char widthArg[32];
