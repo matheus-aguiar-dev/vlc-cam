@@ -23,12 +23,13 @@ struct CamInfo cam;
 time_t rawtime;
 struct tm *timeinfo;
 char buffer[80];
+char time_str[80];
 bool is_recording = false;
 const char* const vlc_args[] = {
 	"--vout=xcb_x11",
 	"--v4l2-chroma=mjpg",
-	"--v4l2-width=800",
-	"--v4l2-height=600",
+	"--v4l2-width=500",
+	"--v4l2-height=400",
 	"--video-filter=transform",
 	"--transform-type=hflip",
 };
@@ -39,37 +40,76 @@ struct CamInfo{
 	size_t size;
 };
 
+void release_instance(){
+	libvlc_media_player_release(mp);
+	libvlc_release(inst);
+}
+void load_instance(){
+		inst = libvlc_new(sizeof(vlc_args) / sizeof(vlc_args[0]), vlc_args);
+		m = libvlc_media_new_location(inst, "v4l2:///dev/video0");
+		mp = libvlc_media_player_new_from_media (m);
+		libvlc_media_release(m);
+		libvlc_media_player_play(mp);
+		libvlc_media_player_set_xwindow(mp, GDK_WINDOW_XID(gtk_widget_get_window(player_widget)));
+}
 void configure_callback(GtkWidget *widget, GdkEventConfigure *event, gpointer data){
-	int width = event->width;   // Get the new width of the window
-	int height = event->height; // Get the new height of the window
+	int width = event->width; 
+	int height = event->height;
 	if(width > 1300 && height >900){
 		gtk_widget_set_size_request(player_widget, width-240, height-100);
 	}
 	else{
-		gtk_widget_set_size_request(player_widget, width-200, height-100);
+		gtk_widget_set_size_request(player_widget, width-130, height-80);
 	}
 }
-
 gboolean update_label(gpointer data) {
 	char buffer[8];
 	sprintf(buffer, "%02d:%02d", count / 60, count % 60);
 	gtk_label_set_text(GTK_LABEL(recording_timer), buffer);
 	count++;
-	return G_SOURCE_CONTINUE; // Continue updating
+	return G_SOURCE_CONTINUE;
 }
-
 void on_picture_button_clicked(GtkButton *button, gpointer user_data){
+	gtk_widget_set_sensitive(picture_button, FALSE);
+	release_instance();
+	char widthArg[32];
+	char heightArg[32];
+	snprintf(widthArg, sizeof(widthArg), "--v4l2-width=%d", cam.sizes[0][0]);
+	snprintf(heightArg, sizeof(heightArg), "--v4l2-height=%d", cam.sizes[0][1]);
+	const char* const vlc_picture_args[] = {
+		"--vout=xcb_x11",
+		"--v4l2-chroma=mjpg",
+		widthArg, 
+		heightArg, 
+		"--video-filter=transform",
+		"--transform-type=hflip",
+	};
+	int i = 0;
+	inst = libvlc_new(sizeof(vlc_picture_args) / sizeof(vlc_picture_args[0]), vlc_picture_args);
+	m = libvlc_media_new_location(inst, "v4l2:///dev/video0");
+	mp = libvlc_media_player_new_from_media (m);
+	libvlc_media_player_play(mp);
+	libvlc_media_player_set_xwindow(mp, GDK_WINDOW_XID(gtk_widget_get_window(player_widget)));
 	time(&rawtime);
 	timeinfo = localtime(&rawtime);
 	strftime(buffer, sizeof(buffer), "%Y-%m-%d-%H-%M-%S.png", timeinfo);
+	gtk_widget_hide(record_button);
+	g_usleep(300000);
 	libvlc_video_take_snapshot(mp,0,buffer,0,0);
 	GdkPixbuf *pixbuf = gdk_pixbuf_new_from_file(buffer, 0);
 	GdkPixbuf *scaledPixbuf = gdk_pixbuf_scale_simple(pixbuf, 70, 70, GDK_INTERP_BILINEAR);
 	gtk_image_set_from_pixbuf(GTK_IMAGE(thumb_img), scaledPixbuf);
+	gtk_widget_show(picture_button);
+	gtk_widget_show(record_button);
+	gtk_widget_set_sensitive(picture_button,TRUE);
+	release_instance();
+	load_instance();
 }
 
 void on_record_button_clicked(GtkButton *button, gpointer user_data){
 	GtkStyleContext *context = gtk_widget_get_style_context(record_button);
+	char ffmpegCommand[256];
+	char deleteFile[100];
 	if(is_recording){
 		gtk_style_context_remove_class(context, "record");
 		gtk_label_set_text(GTK_LABEL(recording_timer), "00:00");
@@ -86,12 +126,33 @@ void on_record_button_clicked(GtkButton *button, gpointer user_data){
 		libvlc_media_player_set_xwindow(mp, GDK_WINDOW_XID(gtk_widget_get_window(player_widget)));
 		gtk_widget_show(picture_button);
 		g_source_remove(timer_id);
+		snprintf(ffmpegCommand, sizeof(ffmpegCommand),
+				"ffmpeg -i %s.ogg -vf \"hflip\" -c:v libx264 -preset medium -crf 18 -c:a libvorbis -y %s.mp4",
+			time_str,time_str	);
+
+		// Execute the FFmpeg command
+		int result = system(ffmpegCommand);
+
+		if (result == 0) {
+			snprintf(deleteFile, sizeof(deleteFile),
+					"%s.ogg",
+					time_str	);
+			if (remove(deleteFile) == 0)
+				printf("Deleted successfully");
+			else
+				printf("Unable to delete the file");
+
+			return 0;
+			printf("FFmpeg command executed successfully.\n");
+		} else {
+			printf("FFmpeg command failed.\n");
+		}
+		fflush(stdout);
 	}
 	else{
 		timer_id = g_timeout_add_seconds(1, update_label, NULL);
 		time_t current_time;
 		struct tm *time_info;
-		char time_str[80];
 		time(&current_time);
 		time_info = localtime(&current_time);
 		strftime(time_str, sizeof(time_str), "%Y-%m-%d_%H-%M-%S", time_info);
@@ -105,7 +166,7 @@ void on_record_button_clicked(GtkButton *button, gpointer user_data){
 		const char *audio_options = ":input-slave=alsa://";  // Modify this to match your audio source
 		libvlc_media_add_option(m, audio_options);
 		const char *transcode_options = g_strdup_printf(
-    ":sout=#transcode{vcodec=theo,vb=1600,fps=15,scale=1,acodec=vorb,ab=90,channels=1,samplerate=44100, filter=transform{type=hflip}}:duplicate{dst=display{noaudio},dst=std{access=file,mux=ogg,dst=%s.ogg}}",
+				":sout=#transcode{vcodec=theo,vb=1600,fps=15,scale=1,acodec=vorb,ab=90,channels=1,samplerate=44100}:duplicate{dst=display{noaudio},dst=std{access=file,mux=ogg,dst=%s.ogg}}",
     time_str
 );
 		libvlc_media_add_option(m, transcode_options);
@@ -177,7 +238,6 @@ main (int    argc,
 		g_error_free(error);
 		return 1;
 	}
-	// Apply the CSS provider to the default screen
 	GdkScreen *screenGtk = gdk_screen_get_default();
 	gtk_style_context_add_provider_for_screen(screenGtk,
 			GTK_STYLE_PROVIDER(css_provider),

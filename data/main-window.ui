@@ -5,24 +5,20 @@
   <object class="GtkImage" id="image1">
     <property name="visible">True</property>
     <property name="can-focus">False</property>
-    <property name="margin-start">5</property>
-    <property name="margin-end">5</property>
-    <property name="margin-top">5</property>
-    <property name="margin-bottom">5</property>
+    <property name="margin-start">15</property>
+    <property name="margin-end">15</property>
+    <property name="margin-top">15</property>
+    <property name="margin-bottom">15</property>
     <property name="pixbuf">images/camera.png</property>
   </object>
   <object class="GtkImage" id="image3">
     <property name="visible">True</property>
     <property name="can-focus">False</property>
-    <property name="margin-start">5</property>
-    <property name="margin-end">5</property>
-    <property name="margin-top">5</property>
-    <property name="margin-bottom">5</property>
     <property name="pixbuf">images/video.png</property>
   </object>
   <object class="GtkApplicationWindow" id="main-window">
     <property name="can-focus">False</property>
-    <property name="default-width">600</property>
+    <property name="default-width">1070</property>
     <property name="default-height">600</property>
     <child>
       <object class="GtkBox">
@@ -32,6 +28,7 @@
         <property name="valign">center</property>
         <property name="hexpand">True</property>
         <property name="vexpand">True</property>
+        <property name="spacing">10</property>
         <child>
           <object class="GtkDrawingArea" id="cam-area">
             <property name="width-request">800</property>
@@ -53,6 +50,8 @@
             <property name="height-request">100</property>
             <property name="visible">True</property>
             <property name="can-focus">False</property>
+            <property name="valign">center</property>
+            <property name="margin-end">5</property>
             <property name="vexpand">True</property>
             <property name="orientation">vertical</property>
             <property name="homogeneous">True</property>
@@ -80,8 +79,12 @@
                     <property name="label" translatable="yes">
 </property>
                     <property name="visible">True</property>
-                    <property name="can-focus">True</property>
+                    <property name="can-focus">False</property>
                     <property name="receives-default">True</property>
+                    <property name="margin-start">5</property>
+                    <property name="margin-end">5</property>
+                    <property name="margin-top">5</property>
+                    <property name="margin-bottom">5</property>
                     <property name="image">image1</property>
                     <property name="use-underline">True</property>
                     <property name="always-show-image">True</property>
@@ -98,8 +101,12 @@
                 <child>
                   <object class="GtkButton" id="record_button">
                     <property name="visible">True</property>
-                    <property name="can-focus">True</property>
+                    <property name="can-focus">False</property>
                     <property name="receives-default">True</property>
+                    <property name="margin-start">5</property>
+                    <property name="margin-end">5</property>
+                    <property name="margin-top">5</property>
+                    <property name="margin-bottom">5</property>
                     <property name="image">image3</property>
                     <property name="always-show-image">True</property>
                     <style>
@@ -131,7 +138,7 @@
               </packing>
             </child>
             <child>
-              <object class="GtkSeparator">
+              <object class="GtkLabel">
                 <property name="visible">True</property>
                 <property name="can-focus">False</property>
               </object>

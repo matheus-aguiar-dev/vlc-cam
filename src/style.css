@@ -2,8 +2,12 @@
 	background-color: #000000;
 }
 .bg-button{
-	background-color: #000; /* Dark background color */
-	border: 2px solid #444; /* Slightly lighter border color */
+	border: none;
+	border-radius: 45px;
+	box-shadow: 0px 8px 15px rgba(0, 0, 0, 0.1);
+	transition: all 0.3s ease 0s;
+	outline: none;
+	background-color: #111212; /* Dark background color */
 	padding: 10px; /* Add padding to separate content from border */
 	color: #fff;
 }
@@ -12,7 +16,10 @@
 	background: white;
 }
 .round-button:hover {
-	background: grey;
+	background-color: #f29829;
+	border-color: #f29829;
+	box-shadow: 0px 15px 20px rgba(117, 117, 113, 0.4);
+	color: #fff;
 }
 .record{
 	border-radius: 50%;
