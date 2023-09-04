@@ -42,7 +42,12 @@ struct CamInfo{
 void configure_callback(GtkWidget *widget, GdkEventConfigure *event, gpointer data){
 	int width = event->width;   // Get the new width of the window
 	int height = event->height; // Get the new height of the window
-	gtk_widget_set_size_request(player_widget, width-120, height-20);
+	if(width > 1300 && height >900){
+		gtk_widget_set_size_request(player_widget, width-240, height-100);
+	}
+	else{
+		gtk_widget_set_size_request(player_widget, width-200, height-100);
+	}
 }
 
 gboolean update_label(gpointer data) {

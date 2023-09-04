@@ -1,9 +1,6 @@
 .bgblack{
 	background-color: #000000;
 }
-.separator{
-	background-color: grey;
-}
 .bg-button{
 	background-color: #000; /* Dark background color */
 	border: 2px solid #444; /* Slightly lighter border color */
