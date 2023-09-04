@@ -18,8 +18,10 @@
   </object>
   <object class="GtkApplicationWindow" id="main-window">
     <property name="can-focus">False</property>
-    <property name="default-width">1070</property>
-    <property name="default-height">600</property>
+    <property name="modal">True</property>
+    <property name="default-width">100</property>
+    <property name="default-height">100</property>
+    <property name="icon">images/vlc-cam.png</property>
     <child>
       <object class="GtkBox">
         <property name="visible">True</property>

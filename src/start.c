@@ -59,7 +59,7 @@ void configure_callback(GtkWidget *widget, GdkEventConfigure *event, gpointer da
 		gtk_widget_set_size_request(player_widget, width-240, height-100);
 	}
 	else{
-		gtk_widget_set_size_request(player_widget, width-130, height-80);
+		gtk_widget_set_size_request(player_widget, width-150, height-80);
 	}
 }
 gboolean update_label(gpointer data) {
